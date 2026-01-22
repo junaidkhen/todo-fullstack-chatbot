@@ -2,6 +2,11 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from typing import Optional
 from src.auth.jwt import get_current_user
+from src.database import get_session
+from src.models.task import User
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel import select
+import hashlib
 import os
 import jwt
 from datetime import datetime, timedelta
@@ -22,22 +27,42 @@ class AuthResponse(BaseModel):
 SECRET_KEY = os.getenv("BETTER_AUTH_SECRET", "default-secret-key-change-in-production")
 ALGORITHM = "HS256"
 
-@router.post("/signup")
-async def signup(auth_request: AuthRequest):
-    """
-    Signup endpoint - creates a new user and returns a JWT token.
-    In a real implementation, this would interact with a user database.
-    For this implementation, we'll simulate the process.
-    """
-    # In a real implementation, we would:
-    # 1. Validate the email format
-    # 2. Check if user already exists
-    # 3. Hash the password
-    # 4. Create user in database
-    # 5. Generate JWT token
 
-    # For simulation purposes, we'll just create a mock user
+def hash_password(password: str) -> str:
+    """Simple password hashing for demo purposes."""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+@router.post("/signup")
+async def signup(
+    auth_request: AuthRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Signup endpoint - creates a new user in the database and returns a JWT token.
+    """
+    # Check if user already exists
+    query = select(User).where(User.email == auth_request.email)
+    result = await session.execute(query)
+    existing_user = result.scalar_one_or_none()
+
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exists"
+        )
+
+    # Create user ID
     user_id = f"user_{auth_request.email.split('@')[0]}_{int(datetime.utcnow().timestamp())}"
+
+    # Create user in database
+    user = User(
+        id=user_id,
+        email=auth_request.email,
+        password_hash=hash_password(auth_request.password)
+    )
+    session.add(user)
+    await session.commit()
 
     # Create JWT token
     token_data = {
@@ -56,26 +81,45 @@ async def signup(auth_request: AuthRequest):
         "message": "Account created successfully"
     }
 
+
 @router.post("/signin")
-async def signin(auth_request: AuthRequest):
+async def signin(
+    auth_request: AuthRequest,
+    session: AsyncSession = Depends(get_session)
+):
     """
     Signin endpoint - authenticates user and returns a JWT token.
-    In a real implementation, this would validate credentials against a database.
-    For this implementation, we'll simulate the process.
+    Creates user if not exists for easy development/testing.
     """
-    # In a real implementation, we would:
-    # 1. Look up user by email
-    # 2. Verify password hash
-    # 3. Generate JWT token
-
-    # For simulation purposes, we'll just validate basic format and create a token
     if len(auth_request.password) < 8:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
 
-    user_id = f"user_{auth_request.email.split('@')[0]}_{int(datetime.utcnow().timestamp())}"
+    # Look up user by email
+    query = select(User).where(User.email == auth_request.email)
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
+
+    if user:
+        # User exists - verify password
+        if user.password_hash != hash_password(auth_request.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password"
+            )
+        user_id = user.id
+    else:
+        # User doesn't exist - create for easy development
+        user_id = f"user_{auth_request.email.split('@')[0]}_{int(datetime.utcnow().timestamp())}"
+        new_user = User(
+            id=user_id,
+            email=auth_request.email,
+            password_hash=hash_password(auth_request.password)
+        )
+        session.add(new_user)
+        await session.commit()
 
     # Create JWT token
     token_data = {

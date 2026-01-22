@@ -2,10 +2,10 @@
 
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 → 2.0.0
-- Modified principles: Restructured into phase-specific constitutions
-- Added sections: Phase-specific governance, constitution routing
-- Removed sections: Single unified principles (now distributed by phase)
+- Version change: 2.0.0 → 3.0.0
+- Modified principles: None (routing document only)
+- Added sections: Phase III routing entry, Phase III Constitution Summary
+- Removed sections: None
 - Templates requiring updates:
   ✅ Plan template compatibility verified
   ✅ Spec template compatibility verified
@@ -24,7 +24,8 @@ The active constitution depends on which phase you're working on:
 | Phase | Constitution File | Status | Architecture |
 |-------|------------------|--------|--------------|
 | **Phase I** | [`specs/phase1/constitution.md`](../../specs/phase1/constitution.md) | ✅ **Completed** | In-memory console app |
-| **Phase II** | [`specs/phase2/constitution.md`](../../specs/phase2/constitution.md) | 🚧 **Active** | Full-stack web app |
+| **Phase II** | [`specs/phase2/constitution.md`](../../specs/phase2/constitution.md) | ✅ **Completed** | Full-stack web app |
+| **Phase III** | [`specs/phase3/constitution.md`](../../specs/phase3/constitution.md) | 🚧 **Active** | AI Chatbot (Gemini Powered) |
 
 ### How to Use
 
@@ -33,12 +34,17 @@ The active constitution depends on which phase you're working on:
    - Applies to code in `/console` directory
    - Principles: TDD, in-memory storage, CLI interface
 
-2. **Working on Phase II** (full-stack web app):
+2. **Working on Phase II** (full-stack web app maintenance):
    - Follow `specs/phase2/constitution.md`
    - Applies to code in `/frontend` and `/backend` directories
    - Principles: Multi-user, persistence, REST API, JWT auth
 
-3. **Working on shared infrastructure** (this is rare):
+3. **Working on Phase III** (AI chatbot - current focus):
+   - Follow `specs/phase3/constitution.md`
+   - Applies to Gemini integration and chat UI
+   - Principles: Stateless backend, Gemini free tier, conversational interface
+
+4. **Working on shared infrastructure** (this is rare):
    - Follow universal principles (listed below)
    - Applies to root-level configuration files
 
@@ -106,7 +112,29 @@ Each phase constitution is authoritative for its domain. When conflicts arise be
 6. Persistent Storage with Clear Schema
 7. RESTful API Design
 
-**Applies To**: `/frontend` and `/backend` directories
+**Applies To**: `/frontend` and `/backend` directories (REST API mode)
+
+### Phase III Constitution Summary
+
+**File**: `specs/phase3/constitution.md`
+
+**Core Principles**:
+1. Spec-Driven Development Only
+2. Stateless Backend Architecture
+3. Gemini API Free Tier Compliance
+4. Friendly Conversational Interface
+5. Security Through User Isolation
+6. Type Safety and Validation
+7. Persistent Storage with Conversation History
+
+**Applies To**: `/frontend` (chat UI) and `/backend` (Gemini integration)
+
+**Technology Stack**:
+- AI: Google Gemini API (free tier) with function calling
+- Model: gemini-1.5-flash or gemini-2.5-flash
+- Backend: FastAPI single `/api/{user_id}/chat` endpoint
+- ORM/DB: SQLModel + Neon PostgreSQL
+- Auth: Better Auth (user_id from auth)
 
 ## Monorepo Structure
 
@@ -114,17 +142,20 @@ Each phase constitution is authoritative for its domain. When conflicts arise be
 /
 ├── console/                        # Phase I: In-memory console app
 │   └── [Governed by specs/phase1/constitution.md]
-├── frontend/                       # Phase II: Next.js web app
-│   └── [Governed by specs/phase2/constitution.md]
-├── backend/                        # Phase II: FastAPI backend
-│   └── [Governed by specs/phase2/constitution.md]
+├── frontend/                       # Phase II/III: Next.js web app / Chat UI
+│   └── [Governed by specs/phase3/constitution.md - current]
+├── backend/                        # Phase II/III: FastAPI backend / Gemini integration
+│   └── [Governed by specs/phase3/constitution.md - current]
 ├── specs/
 │   ├── phase1/
 │   │   ├── constitution.md         # Phase I governance
 │   │   └── [Phase I specifications]
-│   └── phase2/
-│       ├── constitution.md         # Phase II governance
-│       └── [Phase II specifications]
+│   ├── phase2/
+│   │   ├── constitution.md         # Phase II governance
+│   │   └── [Phase II specifications]
+│   └── phase3/
+│       ├── constitution.md         # Phase III governance
+│       └── [Phase III specifications]
 ├── history/
 │   ├── prompts/                    # Prompt History Records
 │   └── adr/                        # Architecture Decision Records
@@ -142,7 +173,7 @@ Each phase constitution is authoritative for its domain. When conflicts arise be
 
 ### Amending a Phase-Specific Constitution
 
-To amend a phase constitution (e.g., `specs/phase2/constitution.md`):
+To amend a phase constitution (e.g., `specs/phase3/constitution.md`):
 
 1. Document justification for the change
 2. Get user approval
@@ -171,11 +202,18 @@ To amend the universal principles in this file:
 - TDD workflow enforced
 - 80% minimum test coverage
 
-### For Phase II (Full-Stack Web)
+### For Phase II (Full-Stack Web - REST Mode)
 - Follow `specs/phase2/constitution.md`
 - Security review required for auth/authorization changes
 - Multi-user isolation verified on all data operations
 - Type safety enforced (TypeScript strict mode, Python type hints)
+
+### For Phase III (AI Chatbot - Current)
+- Follow `specs/phase3/constitution.md`
+- Gemini API free tier compliance required
+- Rate limit awareness (5-15 RPM)
+- User isolation on all tool calls
+- Conversation history persistence verified
 
 ### For All Phases
 - All PRs verify constitutional compliance
@@ -189,5 +227,6 @@ To amend the universal principles in this file:
 |---------|------|----------------|
 | 1.0.0 | 2026-01-02 | Initial unified constitution for Phase II |
 | 2.0.0 | 2026-01-02 | **MAJOR**: Restructured into phase-specific constitutions with routing |
+| 3.0.0 | 2026-01-16 | **MAJOR**: Added Phase III (AI Chatbot with Gemini) constitution |
 
-**Current Version**: 2.0.0 | **Last Amended**: 2026-01-02
+**Current Version**: 3.0.0 | **Last Amended**: 2026-01-16

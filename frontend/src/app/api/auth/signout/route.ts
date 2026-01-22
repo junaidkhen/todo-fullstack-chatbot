@@ -1,6 +1,8 @@
 // src/app/api/auth/signout/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export async function POST(request: NextRequest) {
   try {
     // Extract the auth token from cookies
@@ -14,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the backend
-    const backendResponse = await fetch('http://localhost:8000/api/auth/signout', {
+    const backendResponse = await fetch(`${BACKEND_URL}/api/auth/signout`, {
       method: 'POST',
       headers: {
         'Cookie': `auth-token=${authCookie.value}`,

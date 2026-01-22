@@ -2,8 +2,9 @@ from sqlmodel import Field, SQLModel
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field as PydanticField
-from sqlalchemy import DateTime
+from sqlalchemy import Index
 from sqlalchemy.sql import func
+
 
 class User(SQLModel, table=True):
     """User entity managed by auth system."""
@@ -14,6 +15,7 @@ class User(SQLModel, table=True):
     password_hash: str = Field(nullable=False)  # In real app, this would be from auth system
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
 
+
 class Task(SQLModel, table=True):
     """Task entity with user ownership and validation."""
     __tablename__ = "tasks"
@@ -22,15 +24,29 @@ class Task(SQLModel, table=True):
     user_id: str = Field(foreign_key="users.id", index=True, nullable=False)
     title: str = Field(min_length=1, max_length=200, nullable=False)
     description: Optional[str] = Field(default=None, max_length=5000)
-    completed: bool = Field(default=False, index=True, nullable=False)
+    completed: bool = Field(default=False, nullable=False)
     priority: Optional[str] = Field(default="Medium", max_length=20)  # Low, Medium, High
     category: Optional[str] = Field(default=None, max_length=50)  # Work, Health, Shopping, etc.
     due_date: Optional[datetime] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(
+        default=None,
+        sa_column_kwargs={"server_default": func.now()}
+    )
+    updated_at: datetime = Field(
+        default=None,
+        sa_column_kwargs={
+            "server_default": func.now(),
+            "onupdate": func.now()
+        }
+    )
+
+    # Composite index for efficient user + completed queries
+    __table_args__ = (
+        Index("ix_tasks_user_id_completed", "user_id", "completed"),
+    )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "user_id": "user-uuid-123",
                 "title": "Buy groceries",

@@ -1,0 +1,286 @@
+openapi: 3.1.0
+info:
+  title: Todo AI Chat API
+  description: |
+    Stateless chat endpoint for the Todo AI Chatbot.
+    Receives user messages, orchestrates AI processing via Gemini,
+    and returns natural language responses with tool execution details.
+  version: 1.0.0
+  contact:
+    name: Phase III Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Send a chat message
+      description: |
+        Process a user message through the Gemini AI agent.
+        Creates or continues a conversation, executes any tool calls,
+        and returns the AI's natural language response.
+      operationId: sendChatMessage
+      tags:
+        - Chat
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Authenticated user's unique ID
+          schema:
+            type: string
+            example: "user-123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              newConversation:
+                summary: Start a new conversation
+                value:
+                  message: "Add a task to buy groceries"
+                  conversation_id: null
+              continueConversation:
+                summary: Continue existing conversation
+                value:
+                  message: "Show my tasks"
+                  conversation_id: 42
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                withToolCall:
+                  summary: Response with tool execution
+                  value:
+                    conversation_id: 42
+                    response: "Done! I've added 'Buy groceries' to your task list."
+                    tool_calls:
+                      - name: add_task
+                        arguments:
+                          user_id: "user-123"
+                          title: "Buy groceries"
+                        result:
+                          status: created
+                          task_id: 5
+                          title: "Buy groceries"
+                noToolCall:
+                  summary: Conversational response (no tools)
+                  value:
+                    conversation_id: 42
+                    response: "Hey! I can help you manage your tasks. Try saying 'add task buy milk'!"
+                    tool_calls: null
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emptyMessage:
+                  summary: Empty message
+                  value:
+                    error: validation_error
+                    message: "Message cannot be empty or whitespace"
+                    details:
+                      field: message
+                invalidUserId:
+                  summary: Invalid user_id format
+                  value:
+                    error: bad_request
+                    message: "Invalid user_id format"
+                    details: null
+        '401':
+          description: Unauthorized - User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: unauthorized
+                message: "User not found"
+                details: null
+        '403':
+          description: Forbidden - Access to another user's conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: forbidden
+                message: "Access denied to this resource"
+                details:
+                  resource: conversation
+                  id: 42
+        '422':
+          description: Unprocessable Entity - Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: unprocessable_entity
+                message: "Request body validation failed"
+                details:
+                  errors:
+                    - loc: ["body", "message"]
+                      msg: "field required"
+                      type: "missing"
+        '429':
+          description: Too Many Requests - Gemini rate limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: rate_limited
+                message: "I'm a bit busy right now. Please try again in a moment!"
+                details: null
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: internal_error
+                message: "Something went wrong on my end. Please try again."
+                details: null
+        '503':
+          description: Service Unavailable - Gemini unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: service_unavailable
+                message: "I'm having trouble connecting. Please try again shortly."
+                details: null
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 10000
+          description: User's natural language message
+          example: "Add a task to buy groceries"
+        conversation_id:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: ID of existing conversation to continue (null for new)
+          example: 42
+
+    ChatResponse:
+      type: object
+      required:
+        - conversation_id
+        - response
+      properties:
+        conversation_id:
+          type: integer
+          description: ID of the conversation (new or existing)
+          example: 42
+        response:
+          type: string
+          description: AI's natural language response
+          example: "Done! I've added 'Buy groceries' to your task list."
+        tool_calls:
+          type: array
+          nullable: true
+          description: List of tools executed during processing
+          items:
+            $ref: '#/components/schemas/ToolCall'
+
+    ToolCall:
+      type: object
+      required:
+        - name
+        - arguments
+        - result
+      properties:
+        name:
+          type: string
+          description: Name of the tool executed
+          example: add_task
+          enum:
+            - add_task
+            - list_tasks
+            - complete_task
+            - delete_task
+            - update_task
+        arguments:
+          type: object
+          description: Arguments passed to the tool
+          additionalProperties: true
+          example:
+            user_id: "user-123"
+            title: "Buy groceries"
+        result:
+          type: object
+          description: Result returned from tool execution
+          additionalProperties: true
+          example:
+            status: created
+            task_id: 5
+            title: "Buy groceries"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type/code
+          example: validation_error
+          enum:
+            - bad_request
+            - validation_error
+            - unauthorized
+            - forbidden
+            - unprocessable_entity
+            - rate_limited
+            - internal_error
+            - service_unavailable
+        message:
+          type: string
+          description: Human-readable error description
+          example: "Message cannot be empty"
+        details:
+          type: object
+          nullable: true
+          description: Optional additional error context
+          additionalProperties: true
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token from Better Auth.
+        The user_id in the path should match the token's subject.
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Chat
+    description: AI-powered chat endpoint for task management

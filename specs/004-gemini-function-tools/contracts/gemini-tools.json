@@ -1,0 +1,217 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gemini Function Calling Tools",
+  "description": "JSON Schema definitions for the 5 task management tools used with Gemini function calling",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "add_task",
+      "description": "Use this to create a new todo task for the user. Call when user wants to add, create, or make a new task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The authenticated user's unique ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short title of the task (required)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional longer details or notes about the task"
+          }
+        },
+        "required": ["user_id", "title"]
+      },
+      "returns": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "created" },
+            "task_id": { "type": "integer" },
+            "title": { "type": "string" }
+          },
+          "required": ["status", "task_id", "title"]
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "error" },
+            "message": { "type": "string" }
+          },
+          "required": ["status", "message"]
+        }
+      }
+    },
+    {
+      "name": "list_tasks",
+      "description": "Retrieve the user's tasks. Use when user wants to see, view, show, or list their tasks. Supports filtering by status.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The authenticated user's unique ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["all", "pending", "completed"],
+            "description": "Filter tasks by status. Defaults to 'all' if not specified."
+          }
+        },
+        "required": ["user_id"]
+      },
+      "returns": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "listed" },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer" },
+                  "title": { "type": "string" },
+                  "completed": { "type": "boolean" },
+                  "description": { "type": ["string", "null"] }
+                },
+                "required": ["id", "title", "completed"]
+              }
+            }
+          },
+          "required": ["status", "tasks"]
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "error" },
+            "message": { "type": "string" }
+          },
+          "required": ["status", "message"]
+        }
+      }
+    },
+    {
+      "name": "complete_task",
+      "description": "Mark a task as completed. Use when user says they finished, completed, or done with a task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The authenticated user's unique ID"
+          },
+          "task_id": {
+            "type": "integer",
+            "description": "The ID of the task to mark as completed"
+          }
+        },
+        "required": ["user_id", "task_id"]
+      },
+      "returns": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "completed" },
+            "task_id": { "type": "integer" },
+            "title": { "type": "string" }
+          },
+          "required": ["status", "task_id", "title"]
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "error" },
+            "message": { "type": "string" }
+          },
+          "required": ["status", "message"]
+        }
+      }
+    },
+    {
+      "name": "delete_task",
+      "description": "Delete a task permanently. Use when user wants to remove, delete, or get rid of a task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The authenticated user's unique ID"
+          },
+          "task_id": {
+            "type": "integer",
+            "description": "The ID of the task to delete"
+          }
+        },
+        "required": ["user_id", "task_id"]
+      },
+      "returns": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "deleted" },
+            "task_id": { "type": "integer" },
+            "title": { "type": "string" }
+          },
+          "required": ["status", "task_id", "title"]
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "error" },
+            "message": { "type": "string" }
+          },
+          "required": ["status", "message"]
+        }
+      }
+    },
+    {
+      "name": "update_task",
+      "description": "Change the title and/or description of an existing task. Use when user wants to edit, rename, update, or modify a task.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "The authenticated user's unique ID"
+          },
+          "task_id": {
+            "type": "integer",
+            "description": "The ID of the task to update"
+          },
+          "title": {
+            "type": "string",
+            "description": "New title for the task (optional)"
+          },
+          "description": {
+            "type": "string",
+            "description": "New description for the task (optional)"
+          }
+        },
+        "required": ["user_id", "task_id"]
+      },
+      "returns": {
+        "success": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "updated" },
+            "task_id": { "type": "integer" },
+            "title": { "type": "string" }
+          },
+          "required": ["status", "task_id", "title"]
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "status": { "const": "error" },
+            "message": { "type": "string" }
+          },
+          "required": ["status", "message"]
+        }
+      }
+    }
+  ]
+}

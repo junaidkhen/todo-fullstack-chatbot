@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://todo-fullstack/schemas/agent-response.json",
+  "title": "AgentResponse",
+  "description": "Response from the Gemini agent runner after processing a user message",
+  "type": "object",
+  "required": ["text", "tool_calls"],
+  "properties": {
+    "text": {
+      "type": "string",
+      "description": "Natural language response from Gemini to display to the user",
+      "minLength": 1,
+      "examples": [
+        "Done! I've added 'Buy groceries' to your task list.",
+        "Hello! I'm TaskBot, your friendly todo manager. How can I help you today?",
+        "I'm a bit busy right now. Please try again in a moment!"
+      ]
+    },
+    "tool_calls": {
+      "type": "array",
+      "description": "List of all tools executed during this request (may be empty)",
+      "items": {
+        "$ref": "#/$defs/ToolCallRecord"
+      },
+      "default": []
+    },
+    "conversation_id": {
+      "type": ["integer", "null"],
+      "description": "Optional conversation ID for persistence tracking",
+      "minimum": 1
+    }
+  },
+  "$defs": {
+    "ToolCallRecord": {
+      "type": "object",
+      "description": "Record of a single tool invocation",
+      "required": ["name", "arguments", "result"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": ["add_task", "list_tasks", "complete_task", "delete_task", "update_task"],
+          "description": "Name of the tool that was executed"
+        },
+        "arguments": {
+          "type": "object",
+          "description": "Arguments passed to the tool (always includes user_id)",
+          "required": ["user_id"],
+          "properties": {
+            "user_id": {
+              "type": "string",
+              "description": "The authenticated user's unique ID"
+            }
+          },
+          "additionalProperties": true
+        },
+        "result": {
+          "type": "object",
+          "description": "JSON result returned by the tool execution",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["created", "listed", "completed", "deleted", "updated", "error"],
+              "description": "Outcome status of the tool execution"
+            },
+            "message": {
+              "type": "string",
+              "description": "Error message (present when status is 'error')"
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "text": "Hello! I'm TaskBot, your friendly todo manager. How can I help you today?",
+      "tool_calls": [],
+      "conversation_id": 42
+    },
+    {
+      "text": "Done! I've added 'Buy groceries' to your task list.",
+      "tool_calls": [
+        {
+          "name": "add_task",
+          "arguments": {
+            "user_id": "user-123",
+            "title": "Buy groceries"
+          },
+          "result": {
+            "status": "created",
+            "task_id": 5,
+            "title": "Buy groceries"
+          }
+        }
+      ],
+      "conversation_id": 42
+    },
+    {
+      "text": "Here are your tasks:\n\n1. Buy groceries (pending)\n2. Finish report (completed)",
+      "tool_calls": [
+        {
+          "name": "list_tasks",
+          "arguments": {
+            "user_id": "user-123"
+          },
+          "result": {
+            "status": "listed",
+            "tasks": [
+              {"id": 1, "title": "Buy groceries", "completed": false},
+              {"id": 2, "title": "Finish report", "completed": true}
+            ]
+          }
+        }
+      ],
+      "conversation_id": 42
+    },
+    {
+      "text": "I couldn't find that task. Want me to show you your current list?",
+      "tool_calls": [
+        {
+          "name": "complete_task",
+          "arguments": {
+            "user_id": "user-123",
+            "task_id": 999
+          },
+          "result": {
+            "status": "error",
+            "message": "Task not found or does not belong to user"
+          }
+        }
+      ],
+      "conversation_id": 42
+    },
+    {
+      "text": "I'm a bit busy right now. Please try again in a moment!",
+      "tool_calls": []
+    }
+  ]
+}

@@ -211,6 +211,13 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 
 ## Active Technologies
 - Neon PostgreSQL (serverless) with SQLModel ORM and async driver (asyncpg) (002-fullstack-todo-web)
+- google-genai SDK for Gemini function calling with manual execution mode (004-gemini-function-tools)
+- FastAPI stateless chat endpoint POST /api/{user_id}/chat with Pydantic schemas (005-fastapi-chat-endpoint)
+- Stateless Gemini agent runner with tool execution loop (006-gemini-agent-runner)
+- Async persistence functions for Conversation/Message models with user isolation (008-conversation-persistence)
+- Next.js 16 chat UI with TypeScript strict mode, localStorage conversation persistence, and authenticated API proxy (009-frontend-chat-ui)
+- Markdown documentation (no code implementation) + N/A (documentation artifacts only) (010-deliverables-repo-structure)
+- N/A (no database changes) (010-deliverables-repo-structure)
 
 ## Prompt History Records (PHRs)
 All user interactions and development activities are recorded as Prompt History Records (PHRs) in the `history/prompts/` directory. These records provide complete traceability of the development process:
@@ -227,6 +234,6 @@ Each PHR captures:
 - Architectural decisions made
 
 ## Recent Changes
-- 002-fullstack-todo-web: Added Neon PostgreSQL (serverless) with SQLModel ORM and async driver (asyncpg)
-- Added comprehensive PHR system for development traceability
-- Implemented multi-user full-stack todo application with authentication
+- 010-deliverables-repo-structure: Added Markdown documentation (no code implementation) + N/A (documentation artifacts only)
+- 009-frontend-chat-ui: Added Next.js chat page (/chat) with ChatWindow, ChatMessage, ChatInput, ChatLoading components, localStorage conversation_id persistence, and API proxy route
+- 007-agent-behavior: Added TaskBot system prompt with intent mapping, confirmation templates, error handling rules, and English/Urdu code-switching

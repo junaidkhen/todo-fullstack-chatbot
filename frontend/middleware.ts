@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Middleware to protect routes
 export function middleware(request: NextRequest) {
   // Define protected routes
-  const protectedPaths = ['/tasks'];
+  const protectedPaths = ['/tasks', '/chat'];
   const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -25,5 +25,5 @@ export function middleware(request: NextRequest) {
 
 // Apply middleware to specific paths
 export const config = {
-  matcher: ['/tasks/:path*', '/profile/:path*'], // Apply to protected routes
+  matcher: ['/tasks/:path*', '/chat/:path*', '/profile/:path*'], // Apply to protected routes
 };

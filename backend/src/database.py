@@ -18,6 +18,14 @@ if DATABASE_URL.startswith("sqlite"):
     else:
         ASYNC_DATABASE_URL = DATABASE_URL
     async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=True)
+elif DATABASE_URL.startswith("postgresql://"):
+    # Convert postgresql:// to postgresql+asyncpg:// for async support
+    # Also convert sslmode=require to asyncpg-compatible format
+    url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    url = url.replace("?sslmode=require", "?ssl=require")
+    url = url.replace("&sslmode=require", "&ssl=require")
+    ASYNC_DATABASE_URL = url
+    async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=True)
 else:
     # For other databases, use async engine directly
     async_engine = create_async_engine(DATABASE_URL, echo=True)
@@ -32,5 +40,7 @@ async def init_db():
     from sqlmodel import SQLModel
     # Import all models so SQLModel knows about them
     from src.models.task import Task, User  # noqa: F401
+    from src.models.conversation import Conversation  # noqa: F401
+    from src.models.message import Message  # noqa: F401
     async with async_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)

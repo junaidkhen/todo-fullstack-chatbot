@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -21,7 +23,7 @@ export async function PATCH(
     }
 
     // Forward the request to the backend with the Authorization header
-    const backendResponse = await fetch(`http://localhost:8000/api/tasks/${taskId}/toggle`, {
+    const backendResponse = await fetch(`${BACKEND_URL}/api/tasks/${taskId}/toggle`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${token}`,

@@ -1,6 +1,8 @@
 // src/app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to our backend
-    const backendResponse = await fetch('http://localhost:8000/api/auth/signup', {
+    const backendResponse = await fetch(`${BACKEND_URL}/api/auth/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

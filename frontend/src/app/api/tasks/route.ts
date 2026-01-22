@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export async function GET(request: NextRequest) {
   try {
     // Get the auth token from the cookie
@@ -15,7 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Forward the request to the backend with the Authorization header
-    const backendResponse = await fetch('http://localhost:8000/api/tasks/', {
+    const backendResponse = await fetch(`${BACKEND_URL}/api/tasks/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the backend with the Authorization header
-    const backendResponse = await fetch('http://localhost:8000/api/tasks/', {
+    const backendResponse = await fetch(`${BACKEND_URL}/api/tasks/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
