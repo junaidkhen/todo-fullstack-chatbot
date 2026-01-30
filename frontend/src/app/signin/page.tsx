@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { clearAllConversationIds } from '@/lib/chat-storage';
 
 export default function SigninPage() {
   const [email, setEmail] = useState('');
@@ -24,6 +25,10 @@ export default function SigninPage() {
       });
 
       if (response.ok) {
+        // Clear any old conversation IDs before redirecting
+        // This prevents 403 errors when switching users
+        clearAllConversationIds();
+
         // Redirect to tasks page after successful signin
         router.push('/tasks');
       } else {

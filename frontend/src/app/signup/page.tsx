@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { clearAllConversationIds } from '@/lib/chat-storage';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -24,6 +25,10 @@ export default function SignupPage() {
       });
 
       if (response.ok) {
+        // Clear any old conversation IDs before redirecting
+        // This ensures a fresh start for new users
+        clearAllConversationIds();
+
         // Redirect to tasks page after successful signup
         router.push('/tasks');
       } else {
